@@ -1,0 +1,17 @@
+core/target/
+ios/LunariaCore/LunariaCoreFFI.xcframework/
+ios/LunariaCore/Sources/LunariaCore/LunariaCore.swift
+ios/Lunaria.xcodeproj/
+android/bindings/
+android/jniLibs/
+.DS_Store
+xcuserdata/
+DerivedData/
+ios/build/
+.swiftpm/
+.gradle/
+build/
+.kotlin/
+.idea/
+local.properties
+*.iml
