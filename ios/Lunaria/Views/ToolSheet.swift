@@ -7,17 +7,17 @@ enum Tool: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .dueDate: "Due Date Calculator"
-        case .pregnancyTest: "Pregnancy Test Calculator"
-        case .pregnancyWeek: "Pregnancy Calculator"
+        case .dueDate: L("Due Date Calculator")
+        case .pregnancyTest: L("Pregnancy Test Calculator")
+        case .pregnancyWeek: L("Pregnancy Calculator")
         }
     }
 
     var subtitle: String {
         switch self {
-        case .dueDate: "Calculates estimated due date"
-        case .pregnancyTest: "Calculates optimal date for pregnancy test."
-        case .pregnancyWeek: "Estimates pregnancy week."
+        case .dueDate: L("Calculates estimated due date")
+        case .pregnancyTest: L("Calculates optimal date for pregnancy test.")
+        case .pregnancyWeek: L("Estimates pregnancy week.")
         }
     }
 
@@ -41,19 +41,19 @@ struct ToolSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    DatePicker("First day of last period", selection: $lmp, in: ...Date.now, displayedComponents: .date)
-                    Stepper("Cycle length: \(cycleLength) days", value: $cycleLength, in: 20...45)
+                    DatePicker(L("First day of last period"), selection: $lmp, in: ...Date.now, displayedComponents: .date)
+                    Stepper(L("Cycle length: %@", Ldays(cycleLength)), value: $cycleLength, in: 20...45)
                 }
-                Section("Result") { result }
+                Section(L("Result")) { result }
                 Section {
-                    Text("Estimates only, based on the calendar method. Always confirm with a healthcare professional.")
+                    Text(L("Estimates only, based on the calendar method. Always confirm with a healthcare professional."))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
             }
             .navigationTitle(tool.title)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
             .onAppear {
                 if let last = model.periods.last { lmp = last.start.date }
                 cycleLength = Int(model.stats?.averageCycleLength ?? 28)
@@ -67,20 +67,20 @@ struct ToolSheet: View {
         switch tool {
         case .dueDate:
             if let r = try? dueDate(lastPeriodStart: start, cycleLength: len) {
-                Row(title: "Estimated due date", value: r.dueDate.formatted(.dateTime.day().month(.wide).year()), highlight: true)
-                Row(title: "Likely conception", value: r.conceptionDate.formatted())
+                Row(title: L("Estimated due date"), value: r.dueDate.formatted(.dateTime.day().month(.wide).year()), highlight: true)
+                Row(title: L("Likely conception"), value: r.conceptionDate.formatted())
             }
         case .pregnancyTest:
             if let r = try? pregnancyTestDate(lastPeriodStart: start, cycleLength: len) {
-                Row(title: "Best day to test", value: r.recommendedTest.formatted(.dateTime.weekday().day().month(.wide)), highlight: true)
-                Row(title: "Earliest (sensitive test)", value: r.earliestTest.formatted())
-                Row(title: "Estimated ovulation", value: r.estimatedOvulation.formatted())
+                Row(title: L("Best day to test"), value: r.recommendedTest.formatted(.dateTime.weekday().day().month(.wide)), highlight: true)
+                Row(title: L("Earliest (sensitive test)"), value: r.earliestTest.formatted())
+                Row(title: L("Estimated ovulation"), value: r.estimatedOvulation.formatted())
             }
         case .pregnancyWeek:
             if let r = try? pregnancyProgress(lastPeriodStart: start, cycleLength: len, today: CalDate(.now)) {
-                Row(title: "You are", value: "\(r.weeks) weeks \(r.days) days", highlight: true)
-                Row(title: "Trimester", value: "\(r.trimester)")
-                Row(title: "Due date", value: r.dueDate.formatted(.dateTime.day().month(.wide).year()))
+                Row(title: L("You are"), value: L("%d weeks %d days", Int(r.weeks), Int(r.days)), highlight: true)
+                Row(title: L("Trimester"), value: "\(r.trimester)")
+                Row(title: L("Due date"), value: r.dueDate.formatted(.dateTime.day().month(.wide).year()))
                 ProgressView(value: r.progress).tint(Theme.accent)
             }
         }

@@ -12,7 +12,7 @@ struct CalendarScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Calendar")
+                Text(L("Calendar"))
                     .font(.system(size: 34, weight: .bold))
                     .foregroundStyle(Theme.text)
                     .padding(.top, 8)
@@ -27,7 +27,7 @@ struct CalendarScreen: View {
                 Legend()
 
                 if model.periods.isEmpty {
-                    Text("Tap a day to log when your last period started — predictions appear instantly.")
+                    Text(L("Tap a day to log when your last period started — predictions appear instantly."))
                         .font(.callout)
                         .foregroundStyle(Theme.secondaryText)
                 }
@@ -54,15 +54,15 @@ struct CalendarScreen: View {
             Image(systemName: "calendar")
                 .font(.system(size: 22))
                 .foregroundStyle(Theme.text)
-            Text(anchor.formatted(.dateTime.month(.wide).year()))
+            Text({ let t = anchor.localized(.dateTime.month(.wide).year()); return t.prefix(1).uppercased() + t.dropFirst() }())
                 .font(.system(size: 20, weight: .medium))
                 .foregroundStyle(Theme.text)
                 .contentTransition(.numericText())
             Spacer()
             Button { shift(-1) } label: { Image(systemName: "chevron.left") }
-                .accessibilityLabel("Previous month")
+                .accessibilityLabel(L("Previous month"))
             Button { shift(1) } label: { Image(systemName: "chevron.right") }
-                .accessibilityLabel("Next month")
+                .accessibilityLabel(L("Next month"))
                 .padding(.leading, 8)
         }
         .font(.system(size: 17, weight: .semibold))
@@ -87,7 +87,9 @@ struct MonthGrid: View {
 
     private var weekdaySymbols: [String] {
         let cal = Calendar.current
-        let symbols = cal.shortWeekdaySymbols
+        var cal2 = cal; cal2.locale = AppLanguage.current.locale
+        // Vietnamese short names ("Thứ 2") are too wide for a 7-column grid; use "T2".
+        let symbols = AppLanguage.current.resolved == "vi" ? cal2.veryShortWeekdaySymbols : cal2.shortWeekdaySymbols
         let first = cal.firstWeekday - 1
         return Array(symbols[first...] + symbols[..<first])
     }
@@ -138,7 +140,7 @@ struct DayCell: View {
         .aspectRatio(1, contentMode: .fit)
         .contentShape(Circle())
         .accessibilityElement()
-        .accessibilityLabel("\(day.date.formatted(.dateTime.day().month(.wide))), \(day.kind.label)\(intimate ? ", intimacy logged" : "")")
+        .accessibilityLabel("\(day.date.formatted(.dateTime.day().month(.wide))), \(day.kind.label)\(intimate ? ", " + L("intimacy logged") : "")")
         .accessibilityAddTraits(.isButton)
     }
 
@@ -194,7 +196,7 @@ struct Legend: View {
         HStack(spacing: 6) {
             Image(systemName: "heart.fill").font(.system(size: 11)).foregroundStyle(Theme.accent)
                 .frame(width: 14, height: 14)
-            Text("Intimacy").font(.system(size: 15)).foregroundStyle(Theme.secondaryText).fixedSize()
+            Text(L("Intimacy")).font(.system(size: 15)).foregroundStyle(Theme.secondaryText).fixedSize()
         }
     }
 
@@ -216,7 +218,7 @@ struct GeneralTools: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("General Tools:")
+            Text(L("General Tools:"))
                 .font(.system(size: 26, weight: .semibold))
                 .foregroundStyle(Theme.text)
             ForEach(Tool.allCases) { t in

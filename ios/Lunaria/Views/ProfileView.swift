@@ -6,63 +6,72 @@ struct ProfileView: View {
     @Environment(CycleModel.self) private var model
     @State private var confirmErase = false
     @State private var importing = false
+    @AppStorage(AppLanguage.storageKey) private var language = AppLanguage.system.rawValue
 
     var body: some View {
         let settings = model.settings
         NavigationStack {
             Form {
                 Section {
-                    Toggle("Learn from my history", isOn: binding(\.autoAdjust, settings))
-                    Stepper("Cycle length: \(settings.cycleLength) days", value: binding(\.cycleLength, settings), in: 15...60)
-                        .disabled(settings.autoAdjust && (model.stats?.loggedCycles ?? 0) > 0)
-                    Stepper("Period length: \(settings.periodLength) days", value: binding(\.periodLength, settings), in: 1...14)
-                        .disabled(settings.autoAdjust && !model.periods.isEmpty)
-                    Stepper("Luteal phase: \(settings.lutealLength) days", value: binding(\.lutealLength, settings), in: 7...20)
+                    Picker(L("Language"), selection: $language) {
+                        ForEach(AppLanguage.allCases) { Text($0.label).tag($0.rawValue) }
+                    }
                 } header: {
-                    Text("Cycle")
+                    Text(L("App"))
+                }
+
+                Section {
+                    Toggle(L("Learn from my history"), isOn: binding(\.autoAdjust, settings))
+                    Stepper(L("Cycle length: %@", Ldays(Int(settings.cycleLength))), value: binding(\.cycleLength, settings), in: 15...60)
+                        .disabled(settings.autoAdjust && (model.stats?.loggedCycles ?? 0) > 0)
+                    Stepper(L("Period length: %@", Ldays(Int(settings.periodLength))), value: binding(\.periodLength, settings), in: 1...14)
+                        .disabled(settings.autoAdjust && !model.periods.isEmpty)
+                    Stepper(L("Luteal phase: %@", Ldays(Int(settings.lutealLength))), value: binding(\.lutealLength, settings), in: 7...20)
+                } header: {
+                    Text(L("Cycle"))
                 } footer: {
-                    Text("With “Learn from my history” on, averages of your last 6 cycles are used once you have logged data.")
+                    Text(L("With “Learn from my history” on, averages of your last 6 cycles are used once you have logged data."))
                 }
 
                 if let stats = model.stats, stats.loggedCycles > 0 {
-                    Section("History") {
-                        LabeledContent("Cycles logged", value: "\(stats.loggedCycles)")
-                        if let s = stats.shortestCycle { LabeledContent("Shortest cycle", value: "\(s) days") }
-                        if let l = stats.longestCycle { LabeledContent("Longest cycle", value: "\(l) days") }
+                    Section(L("History")) {
+                        LabeledContent(L("Cycles logged"), value: "\(stats.loggedCycles)")
+                        if let s = stats.shortestCycle { LabeledContent(L("Shortest cycle"), value: Ldays(Int(s))) }
+                        if let l = stats.longestCycle { LabeledContent(L("Longest cycle"), value: Ldays(Int(l))) }
                     }
                 }
 
-                Section("Periods") {
+                Section(L("Periods")) {
                     ForEach(model.periods.reversed(), id: \.start.id) { p in
                         LabeledContent(p.start.formatted(.dateTime.day().month(.wide).year()),
-                                       value: "\(p.end.id == p.start.id ? 1 : daysBetween(p.start, p.end) + 1) days")
+                                       value: Ldays(p.end.id == p.start.id ? 1 : daysBetween(p.start, p.end) + 1))
                     }
                     .onDelete { idx in
                         let list = Array(model.periods.reversed())
                         model.perform { for i in idx { try model.store.deletePeriod(start: list[i].start) } }
                     }
-                    if model.periods.isEmpty { Text("No periods logged yet").foregroundStyle(.secondary) }
+                    if model.periods.isEmpty { Text(L("No periods logged yet")).foregroundStyle(.secondary) }
                 }
 
                 Section {
                     if let json = try? model.store.exportJson() {
-                        ShareLink(item: json, preview: SharePreview("Lunaria backup")) {
-                            Label("Export backup", systemImage: "square.and.arrow.up")
+                        ShareLink(item: json, preview: SharePreview(L("Lunaria backup"))) {
+                            Label(L("Export backup"), systemImage: "square.and.arrow.up")
                         }
                     }
-                    Button { importing = true } label: { Label("Import backup", systemImage: "square.and.arrow.down") }
-                    Button(role: .destructive) { confirmErase = true } label: { Label("Erase all data", systemImage: "trash") }
+                    Button { importing = true } label: { Label(L("Import backup"), systemImage: "square.and.arrow.down") }
+                    Button(role: .destructive) { confirmErase = true } label: { Label(L("Erase all data"), systemImage: "trash") }
                 } header: {
-                    Text("Your data")
+                    Text(L("Your data"))
                 } footer: {
-                    Text("Lunaria has no account, no server and no analytics. Your data never leaves this device unless you export it.\n\nLunaria core v\(coreVersion()) · Open source (MIT)")
+                    Text(L("Lunaria has no account, no server and no analytics. Your data never leaves this device unless you export it.") + "\n\nLunaria core v\(coreVersion()) · " + L("Open source (MIT)"))
                 }
             }
-            .navigationTitle("Profile")
-            .confirmationDialog("Erase all data?", isPresented: $confirmErase, titleVisibility: .visible) {
-                Button("Erase", role: .destructive) { model.perform { try model.store.eraseAll() } }
+            .navigationTitle(L("Profile"))
+            .confirmationDialog(L("Erase all data?"), isPresented: $confirmErase, titleVisibility: .visible) {
+                Button(L("Erase"), role: .destructive) { model.perform { try model.store.eraseAll() } }
             } message: {
-                Text("This permanently removes every period and log from this device.")
+                Text(L("This permanently removes every period and log from this device."))
             }
             .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .plainText]) { result in
                 model.perform {

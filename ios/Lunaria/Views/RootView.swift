@@ -15,11 +15,11 @@ enum AppTab: CaseIterable, Hashable {
 
     var title: String {
         switch self {
-        case .home: "Home"
-        case .calendar: "Calendar"
-        case .log: "Log"
-        case .learn: "Learn"
-        case .profile: "Profile"
+        case .home: L("Home")
+        case .calendar: L("Calendar")
+        case .log: L("Log")
+        case .learn: L("Learn")
+        case .profile: L("Profile")
         }
     }
 }
@@ -27,22 +27,25 @@ enum AppTab: CaseIterable, Hashable {
 struct RootView: View {
     @Environment(CycleModel.self) private var model
     @State private var tab: AppTab = .calendar
+    @AppStorage(AppLanguage.storageKey) private var language = AppLanguage.system.rawValue
 
     var body: some View {
         // Native TabView: on iOS 26+ this renders as the system Liquid Glass tab bar.
         TabView(selection: $tab) {
             ForEach(AppTab.allCases, id: \.self) { t in
                 screen(t)
+                    .id(language) // rebuild screens when the language changes
                     .tabItem { Label(t.title, systemImage: t.icon) }
                     .tag(t)
             }
         }
         .minimizeTabBarOnScroll()
-        .alert("Something went wrong", isPresented: Binding(
+        .environment(\.locale, (AppLanguage(rawValue: language) ?? .system).locale)
+        .alert(L("Something went wrong"), isPresented: Binding(
             get: { model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button(L("OK"), role: .cancel) {}
         } message: {
             Text(model.errorMessage ?? "")
         }

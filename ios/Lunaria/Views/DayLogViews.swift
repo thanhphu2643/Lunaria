@@ -18,7 +18,7 @@ struct DayDetailSheet: View {
             }
             .navigationTitle(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
         }
     }
 }
@@ -32,21 +32,21 @@ struct PeriodActions: View {
         let isFuture = date > model.today
         VStack(spacing: 10) {
             if !isPeriod {
-                PillButton(title: "Period started", icon: "drop.fill", filled: true) {
+                PillButton(title: L("Period started"), icon: "drop.fill", filled: true) {
                     model.perform { try model.store.startPeriod(start: date) }
                 }
                 .disabled(isFuture)
             } else {
-                PillButton(title: "Period ended this day", icon: "checkmark", filled: true) {
+                PillButton(title: L("Period ended this day"), icon: "checkmark", filled: true) {
                     model.perform { try model.store.endPeriod(date: date) }
                 }
             }
-            PillButton(title: isPeriod ? "Remove this day" : "Add just this day", icon: isPeriod ? "minus" : "plus", filled: false) {
+            PillButton(title: isPeriod ? L("Remove this day") : L("Add just this day"), icon: isPeriod ? "minus" : "plus", filled: false) {
                 model.perform { try model.store.togglePeriodDay(date: date) }
             }
             .disabled(isFuture && !isPeriod)
             if isFuture {
-                Text("You can log periods up to today.")
+                Text(L("You can log periods up to today."))
                     .font(.footnote).foregroundStyle(Theme.secondaryText)
             }
         }
@@ -83,28 +83,28 @@ struct DayLogEditor: View {
     var body: some View {
         let current = log ?? model.log(for: date)
         VStack(alignment: .leading, spacing: 22) {
-            section("Flow") {
+            section(L("Flow")) {
                 chips(Flow.allCases, selected: current.flow.map { [$0] } ?? [], title: \.title) { f in
                     update { $0.flow = $0.flow == f ? nil : f }
                 }
             }
-            section("Mood") {
+            section(L("Mood")) {
                 chips(Mood.allCases, selected: current.mood.map { [$0] } ?? [], title: \.title) { m in
                     update { $0.mood = $0.mood == m ? nil : m }
                 }
             }
-            section("Symptoms") {
+            section(L("Symptoms")) {
                 chips(Symptom.allCases, selected: current.symptoms, title: \.title) { s in
                     update { l in
                         if let i = l.symptoms.firstIndex(of: s) { l.symptoms.remove(at: i) } else { l.symptoms.append(s) }
                     }
                 }
             }
-            section("Intimacy") {
+            section(L("Intimacy")) {
                 IntimacyEditor(intimacy: current.intimacy) { new in update { $0.intimacy = new } }
             }
-            section("Notes") {
-                TextField("How are you feeling?", text: Binding(
+            section(L("Notes")) {
+                TextField(L("How are you feeling?"), text: Binding(
                     get: { current.note },
                     set: { v in update { $0.note = v } }
                 ), axis: .vertical)
@@ -155,16 +155,16 @@ struct IntimacyEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
-                option("No", icon: nil, on: intimacy == nil) { onChange(nil) }
-                option("Protected", icon: "heart.fill", on: intimacy?.protected == true) {
+                option(L("No"), icon: nil, on: intimacy == nil) { onChange(nil) }
+                option(L("Protected"), icon: "heart.fill", on: intimacy?.protected == true) {
                     onChange(Intimacy(protected: true, note: intimacy?.note ?? ""))
                 }
-                option("Unprotected", icon: "heart.fill", on: intimacy?.protected == false) {
+                option(L("Unprotected"), icon: "heart.fill", on: intimacy?.protected == false) {
                     onChange(Intimacy(protected: false, note: intimacy?.note ?? ""))
                 }
             }
             if let intimacy {
-                TextField("Note (only stored on this phone)", text: Binding(
+                TextField(L("Note (only stored on this phone)"), text: Binding(
                     get: { intimacy.note },
                     set: { onChange(Intimacy(protected: intimacy.protected, note: $0)) }
                 ), axis: .vertical)
@@ -239,11 +239,11 @@ struct DailyLogScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Daily Log")
+                Text(L("Daily Log"))
                     .font(.system(size: 34, weight: .bold))
                     .foregroundStyle(Theme.text)
                     .padding(.top, 8)
-                DatePicker("Day", selection: $day, in: ...Date.now, displayedComponents: .date)
+                DatePicker(L("Day"), selection: $day, in: ...Date.now, displayedComponents: .date)
                     .font(.system(size: 18, weight: .medium))
                 PeriodActions(date: CalDate(day))
                 DayLogEditor(date: CalDate(day))
@@ -260,7 +260,7 @@ struct DailyLogScreen: View {
 extension Flow: CaseIterable {
     public static var allCases: [Flow] { [.spotting, .light, .medium, .heavy] }
     var title: String {
-        switch self { case .spotting: "Spotting"; case .light: "Light"; case .medium: "Medium"; case .heavy: "Heavy" }
+        switch self { case .spotting: L("Spotting"); case .light: L("Light"); case .medium: L("Medium"); case .heavy: L("Heavy") }
     }
 }
 
@@ -268,8 +268,8 @@ extension Mood: CaseIterable {
     public static var allCases: [Mood] { [.happy, .calm, .sensitive, .sad, .irritated, .anxious] }
     var title: String {
         switch self {
-        case .happy: "😊 Happy"; case .calm: "😌 Calm"; case .sensitive: "🥺 Sensitive"
-        case .sad: "😢 Sad"; case .irritated: "😤 Irritated"; case .anxious: "😰 Anxious"
+        case .happy: "😊 " + L("Happy"); case .calm: "😌 " + L("Calm"); case .sensitive: "🥺 " + L("Sensitive")
+        case .sad: "😢 " + L("Sad"); case .irritated: "😤 " + L("Irritated"); case .anxious: "😰 " + L("Anxious")
         }
     }
 }
@@ -280,9 +280,9 @@ extension Symptom: CaseIterable {
     }
     var title: String {
         switch self {
-        case .cramps: "Cramps"; case .headache: "Headache"; case .bloating: "Bloating"; case .acne: "Acne"
-        case .tenderBreasts: "Tender breasts"; case .fatigue: "Fatigue"; case .backPain: "Back pain"
-        case .nausea: "Nausea"; case .cravings: "Cravings"; case .insomnia: "Insomnia"
+        case .cramps: L("Cramps"); case .headache: L("Headache"); case .bloating: L("Bloating"); case .acne: L("Acne")
+        case .tenderBreasts: L("Tender breasts"); case .fatigue: L("Fatigue"); case .backPain: L("Back pain")
+        case .nausea: L("Nausea"); case .cravings: L("Cravings"); case .insomnia: L("Insomnia")
         }
     }
 }

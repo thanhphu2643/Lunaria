@@ -85,7 +85,7 @@ extension CalDate {
     }
 
     func formatted(_ style: Date.FormatStyle = .dateTime.day().month(.abbreviated)) -> String {
-        date.formatted(style)
+        date.localized(style)
     }
 }
 

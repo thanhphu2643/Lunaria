@@ -27,11 +27,11 @@ extension Color {
 extension DayKind {
     var label: String {
         switch self {
-        case .period: "Period"
-        case .predictedPeriod: "Predicted"
-        case .ovulation: "Ovulation"
-        case .fertile: "Fertile Days"
-        case .safe: "Safe Days"
+        case .period: L("Period")
+        case .predictedPeriod: L("Predicted")
+        case .ovulation: L("Ovulation")
+        case .fertile: L("Fertile Days")
+        case .safe: L("Safe Days")
         case .unknown: ""
         }
     }
@@ -40,19 +40,19 @@ extension DayKind {
 extension CyclePhase {
     var title: String {
         switch self {
-        case .menstrual: "Menstrual phase"
-        case .follicular: "Follicular phase"
-        case .fertile: "Fertile window"
-        case .luteal: "Luteal phase"
+        case .menstrual: L("Menstrual phase")
+        case .follicular: L("Follicular phase")
+        case .fertile: L("Fertile window")
+        case .luteal: L("Luteal phase")
         }
     }
 
     var blurb: String {
         switch self {
-        case .menstrual: "Rest, hydrate and keep warm. Energy is usually lower."
-        case .follicular: "Estrogen is rising — energy and mood often improve."
-        case .fertile: "Highest chance of pregnancy in this window."
-        case .luteal: "Progesterone peaks. PMS symptoms may appear near the end."
+        case .menstrual: L("Rest, hydrate and keep warm. Energy is usually lower.")
+        case .follicular: L("Estrogen is rising — energy and mood often improve.")
+        case .fertile: L("Highest chance of pregnancy in this window.")
+        case .luteal: L("Progesterone peaks. PMS symptoms may appear near the end.")
         }
     }
 }

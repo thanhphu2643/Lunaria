@@ -8,7 +8,11 @@ struct Article: Identifiable {
     let body: String
 }
 
-private let articles: [Article] = [
+private var articles: [Article] {
+    AppLanguage.current.resolved == "vi" ? viArticles : enArticles
+}
+
+private let enArticles: [Article] = [
     Article(icon: "drop.fill", title: "The four phases of your cycle",
             summary: "Menstrual, follicular, ovulation and luteal.",
             body: """
@@ -47,12 +51,51 @@ private let articles: [Article] = [
             """),
 ]
 
+private let viArticles: [Article] = [
+    Article(icon: "drop.fill", title: "Bốn giai đoạn của chu kỳ",
+            summary: "Hành kinh, nang trứng, rụng trứng và hoàng thể.",
+            body: """
+            **Hành kinh (ngày 1–5):** niêm mạc tử cung bong ra. Nội tiết tố ở mức thấp nhất.
+
+            **Nang trứng (ngày 1–13):** estrogen tăng khi các nang trứng phát triển. Năng lượng thường tăng lên.
+
+            **Rụng trứng (khoảng ngày 14 với chu kỳ 28 ngày):** trứng được phóng ra và sống được khoảng 24 giờ.
+
+            **Hoàng thể (ngày 15–28):** progesterone tăng. Nếu không có thai, nội tiết tố giảm xuống và kỳ kinh tiếp theo bắt đầu.
+            """),
+    Article(icon: "sparkles", title: "Lunaria dự đoán thế nào",
+            summary: "Giải thích phương pháp tính theo lịch.",
+            body: """
+            Lunaria lấy trung bình độ dài 6 chu kỳ gần nhất của bạn (từ ngày bắt đầu kỳ này đến ngày bắt đầu kỳ sau). \
+            Ngày rụng trứng được ước tính là 14 ngày trước kỳ kinh dự kiến, vì giai đoạn hoàng thể khá ổn định. \
+            Cửa sổ thụ thai gồm 5 ngày trước rụng trứng, ngày rụng trứng và 1 ngày sau đó, vì tinh trùng có thể sống tới 5 ngày.
+
+            Dự đoán sẽ chính xác hơn khi bạn ghi lại nhiều chu kỳ hơn. Đây chỉ là ước tính: **đừng dùng làm biện pháp tránh thai.**
+            """),
+    Article(icon: "stethoscope", title: "Khi nào nên gặp bác sĩ",
+            summary: "Những dấu hiệu cần kiểm tra.",
+            body: """
+            Bạn nên đi khám nếu:
+            • chu kỳ thường ngắn hơn 21 ngày hoặc dài hơn 35 ngày
+            • kỳ kinh kéo dài hơn 7 ngày
+            • ra máu rất nhiều (phải thay băng mỗi 1–2 giờ)
+            • đau dữ dội đến mức không sinh hoạt bình thường được
+            • trễ kinh từ 3 kỳ liên tiếp trở lên mà không mang thai
+            """),
+    Article(icon: "lock.fill", title: "Quyền riêng tư của bạn",
+            summary: "Vì sao mọi dữ liệu chỉ nằm trên điện thoại.",
+            body: """
+            Dữ liệu kinh nguyệt là dữ liệu sức khỏe nhạy cảm. Lunaria chỉ lưu nó trong một file trên máy của bạn. \
+            Không tài khoản, không đồng bộ đám mây, không quảng cáo, không SDK phân tích. Mã nguồn mở nên ai cũng có thể kiểm chứng điều này.
+            """),
+]
+
 struct LearnView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Learn")
+                    Text(L("Learn"))
                         .font(.system(size: 34, weight: .bold))
                         .foregroundStyle(Theme.text)
                         .padding(.top, 8)
