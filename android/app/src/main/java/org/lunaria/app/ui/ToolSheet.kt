@@ -64,7 +64,7 @@ fun ToolSheet(tool: Tool, onDismiss: () -> Unit) {
             Text(tool.title, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = Palette.text)
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("First day of last period", color = Palette.text, modifier = Modifier.weight(1f))
+                Text(L("First day of last period"), color = Palette.text, modifier = Modifier.weight(1f))
                 TextButton(onClick = { picking = true }) {
                     Icon(Icons.Outlined.CalendarMonth, null)
                     Spacer(Modifier.width(6.dp))
@@ -72,9 +72,9 @@ fun ToolSheet(tool: Tool, onDismiss: () -> Unit) {
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Cycle length: $cycleLength days", color = Palette.text, modifier = Modifier.weight(1f))
-                FilledTonalIconButton(onClick = { if (cycleLength > 20) cycleLength-- }) { Icon(Icons.Filled.Remove, "Shorter") }
-                FilledTonalIconButton(onClick = { if (cycleLength < 45) cycleLength++ }) { Icon(Icons.Filled.Add, "Longer") }
+                Text(L("Cycle length: %s", Ldays(cycleLength)), color = Palette.text, modifier = Modifier.weight(1f))
+                FilledTonalIconButton(onClick = { if (cycleLength > 20) cycleLength-- }) { Icon(Icons.Filled.Remove, L("Shorter")) }
+                FilledTonalIconButton(onClick = { if (cycleLength < 45) cycleLength++ }) { Icon(Icons.Filled.Add, L("Longer")) }
             }
             HorizontalDivider(color = Palette.text.copy(alpha = 0.08f))
 
@@ -82,18 +82,18 @@ fun ToolSheet(tool: Tool, onDismiss: () -> Unit) {
             val len = cycleLength.toUInt()
             when (tool) {
                 Tool.DueDate -> runCatching { dueDate(start, len) }.getOrNull()?.let { r ->
-                    ResultRow("Estimated due date", r.dueDate.format("d MMMM yyyy"), highlight = true)
-                    ResultRow("Likely conception", r.conceptionDate.format())
+                    ResultRow(L("Estimated due date"), r.dueDate.format("d MMMM yyyy"), highlight = true)
+                    ResultRow(L("Likely conception"), r.conceptionDate.format())
                 }
                 Tool.PregnancyTest -> runCatching { pregnancyTestDate(start, len) }.getOrNull()?.let { r ->
-                    ResultRow("Best day to test", r.recommendedTest.format("EEE, d MMMM"), highlight = true)
-                    ResultRow("Earliest (sensitive test)", r.earliestTest.format())
-                    ResultRow("Estimated ovulation", r.estimatedOvulation.format())
+                    ResultRow(L("Best day to test"), r.recommendedTest.format("EEE, d MMMM"), highlight = true)
+                    ResultRow(L("Earliest (sensitive test)"), r.earliestTest.format())
+                    ResultRow(L("Estimated ovulation"), r.estimatedOvulation.format())
                 }
                 Tool.PregnancyWeek -> runCatching { pregnancyProgress(start, len, cycle.today) }.getOrNull()?.let { r ->
-                    ResultRow("You are", "${r.weeks} weeks ${r.days} days", highlight = true)
-                    ResultRow("Trimester", "${r.trimester}")
-                    ResultRow("Due date", r.dueDate.format("d MMMM yyyy"))
+                    ResultRow(L("You are"), L("%d weeks %d days", r.weeks.toInt(), r.days.toInt()), highlight = true)
+                    ResultRow(L("Trimester"), "${r.trimester}")
+                    ResultRow(L("Due date"), r.dueDate.format("d MMMM yyyy"))
                     LinearProgressIndicator(
                         progress = { r.progress.toFloat() },
                         modifier = Modifier.fillMaxWidth().height(8.dp),
@@ -104,7 +104,7 @@ fun ToolSheet(tool: Tool, onDismiss: () -> Unit) {
             }
             Spacer(Modifier.height(4.dp))
             Text(
-                "Estimates only, based on the calendar method. Always confirm with a healthcare professional.",
+                L("Estimates only, based on the calendar method. Always confirm with a healthcare professional."),
                 fontSize = 13.sp, color = Palette.secondaryText,
             )
         }

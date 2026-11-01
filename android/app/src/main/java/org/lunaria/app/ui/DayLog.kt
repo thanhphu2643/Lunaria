@@ -1,5 +1,10 @@
 package org.lunaria.app.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -64,6 +70,7 @@ import org.lunaria.app.toCal
 import uniffi.lunaria_core.CalDate
 import uniffi.lunaria_core.DayLog
 import uniffi.lunaria_core.Flow
+import uniffi.lunaria_core.Intimacy
 import uniffi.lunaria_core.Mood
 import uniffi.lunaria_core.Symptom
 
@@ -95,21 +102,21 @@ fun PeriodActions(date: CalDate) {
     val isFuture = date > cycle.today
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (!isPeriod) {
-            PillButton("Period started", Icons.Filled.WaterDrop, filled = true, enabled = !isFuture) {
+            PillButton(L("Period started"), Icons.Filled.WaterDrop, filled = true, enabled = !isFuture) {
                 cycle.perform { cycle.store.startPeriod(date) }
             }
         } else {
-            PillButton("Period ended this day", Icons.Filled.Check, filled = true) {
+            PillButton(L("Period ended this day"), Icons.Filled.Check, filled = true) {
                 cycle.perform { cycle.store.endPeriod(date) }
             }
         }
         PillButton(
-            if (isPeriod) "Remove this day" else "Add just this day",
+            if (isPeriod) L("Remove this day") else L("Add just this day"),
             if (isPeriod) Icons.Filled.Remove else Icons.Filled.Add,
             filled = false,
             enabled = !isFuture || isPeriod,
         ) { cycle.perform { cycle.store.togglePeriodDay(date) } }
-        if (isFuture) Text("You can log periods up to today.", fontSize = 13.sp, color = Palette.secondaryText)
+        if (isFuture) Text(L("You can log periods up to today."), fontSize = 13.sp, color = Palette.secondaryText)
     }
 }
 
@@ -155,28 +162,78 @@ fun DayLogEditor(date: CalDate) {
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(22.dp)) {
-        Section("Flow") {
+        Section(L("Flow")) {
             Chips(Flow.entries, listOfNotNull(log.flow), Flow::title) { f ->
                 update { it.copy(flow = if (it.flow == f) null else f) }
             }
         }
-        Section("Mood") {
+        Section(L("Mood")) {
             Chips(Mood.entries, listOfNotNull(log.mood), Mood::title) { m ->
                 update { it.copy(mood = if (it.mood == m) null else m) }
             }
         }
-        Section("Symptoms") {
+        Section(L("Symptoms")) {
             Chips(Symptom.entries, log.symptoms, Symptom::title) { s ->
                 update { if (s in it.symptoms) it.copy(symptoms = it.symptoms - s) else it.copy(symptoms = it.symptoms + s) }
             }
         }
-        Section("Notes") {
+        Section(L("Intimacy")) {
+            IntimacyEditor(log.intimacy) { v -> update { it.copy(intimacy = v) } }
+        }
+        Section(L("Notes")) {
             OutlinedTextField(
                 value = log.note,
                 onValueChange = { v -> update { it.copy(note = v) } },
-                placeholder = { Text("How are you feeling?") },
+                placeholder = { Text(L("How are you feeling?")) },
                 minLines = 3,
                 maxLines = 6,
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Palette.background.copy(alpha = 0.6f),
+                    focusedContainerColor = Palette.background.copy(alpha = 0.6f),
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Palette.accent,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+/** Logs sex on a day: protected or not, plus a private note. */
+@Composable
+private fun IntimacyEditor(intimacy: Intimacy?, onChange: (Intimacy?) -> Unit) {
+    val haptics = LocalHapticFeedback.current
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            @Composable
+            fun option(title: String, heart: Boolean, on: Boolean, value: () -> Intimacy?) {
+                Row(
+                    Modifier
+                        .background(if (on) Palette.accent else Palette.background.copy(alpha = 0.7f), CircleShape)
+                        .clip(CircleShape)
+                        .clickableNoRipple { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); onChange(value()) }
+                        .padding(horizontal = 14.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (heart) {
+                        Icon(Icons.Filled.Favorite, null, Modifier.size(12.dp), tint = if (on) Color.White else Palette.accent)
+                        Spacer(Modifier.width(5.dp))
+                    }
+                    Text(title, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = if (on) Color.White else Palette.text)
+                }
+            }
+            option(L("No"), heart = false, on = intimacy == null) { null }
+            option(L("Protected"), heart = true, on = intimacy?.protected == true) { Intimacy(true, intimacy?.note ?: "") }
+            option(L("Unprotected"), heart = true, on = intimacy?.protected == false) { Intimacy(false, intimacy?.note ?: "") }
+        }
+        AnimatedVisibility(visible = intimacy != null, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+            OutlinedTextField(
+                value = intimacy?.note ?: "",
+                onValueChange = { v -> intimacy?.let { onChange(it.copy(note = v)) } },
+                placeholder = { Text(L("Note (only stored on this phone)")) },
+                minLines = 2,
+                maxLines = 5,
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = Palette.background.copy(alpha = 0.6f),
@@ -230,9 +287,9 @@ fun DailyLogScreen() {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).imePadding(),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        ScreenTitle("Daily Log")
+        ScreenTitle(L("Daily Log"))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Day", fontSize = 18.sp, fontWeight = FontWeight.Medium, color = Palette.text)
+            Text(L("Day"), fontSize = 18.sp, fontWeight = FontWeight.Medium, color = Palette.text)
             Spacer(Modifier.weight(1f))
             TextButton(onClick = { picking = true }) {
                 Icon(Icons.Outlined.CalendarMonth, null)
@@ -266,9 +323,9 @@ fun DatePickerSheet(initial: LocalDate, onDismiss: () -> Unit, onPick: (LocalDat
         confirmButton = {
             TextButton(onClick = {
                 state.selectedDateMillis?.let { onPick(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()) }
-            }) { Text("OK") }
+            }) { Text(L("OK")) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(L("Cancel")) } },
     ) { DatePicker(state) }
 }
 
@@ -276,34 +333,34 @@ fun DatePickerSheet(initial: LocalDate, onDismiss: () -> Unit, onPick: (LocalDat
 
 val Flow.title: String
     get() = when (this) {
-        Flow.SPOTTING -> "Spotting"
-        Flow.LIGHT -> "Light"
-        Flow.MEDIUM -> "Medium"
-        Flow.HEAVY -> "Heavy"
+        Flow.SPOTTING -> L("Spotting")
+        Flow.LIGHT -> L("Light")
+        Flow.MEDIUM -> L("Medium")
+        Flow.HEAVY -> L("Heavy")
     }
 
 val Mood.title: String
     get() = when (this) {
-        Mood.HAPPY -> "😊 Happy"
-        Mood.CALM -> "😌 Calm"
-        Mood.SENSITIVE -> "🥺 Sensitive"
-        Mood.SAD -> "😢 Sad"
-        Mood.IRRITATED -> "😤 Irritated"
-        Mood.ANXIOUS -> "😰 Anxious"
+        Mood.HAPPY -> "😊 " + L("Happy")
+        Mood.CALM -> "😌 " + L("Calm")
+        Mood.SENSITIVE -> "🥺 " + L("Sensitive")
+        Mood.SAD -> "😢 " + L("Sad")
+        Mood.IRRITATED -> "😤 " + L("Irritated")
+        Mood.ANXIOUS -> "😰 " + L("Anxious")
     }
 
 val Symptom.title: String
     get() = when (this) {
-        Symptom.CRAMPS -> "Cramps"
-        Symptom.HEADACHE -> "Headache"
-        Symptom.BLOATING -> "Bloating"
-        Symptom.ACNE -> "Acne"
-        Symptom.TENDER_BREASTS -> "Tender breasts"
-        Symptom.FATIGUE -> "Fatigue"
-        Symptom.BACK_PAIN -> "Back pain"
-        Symptom.NAUSEA -> "Nausea"
-        Symptom.CRAVINGS -> "Cravings"
-        Symptom.INSOMNIA -> "Insomnia"
+        Symptom.CRAMPS -> L("Cramps")
+        Symptom.HEADACHE -> L("Headache")
+        Symptom.BLOATING -> L("Bloating")
+        Symptom.ACNE -> L("Acne")
+        Symptom.TENDER_BREASTS -> L("Tender breasts")
+        Symptom.FATIGUE -> L("Fatigue")
+        Symptom.BACK_PAIN -> L("Back pain")
+        Symptom.NAUSEA -> L("Nausea")
+        Symptom.CRAVINGS -> L("Cravings")
+        Symptom.INSOMNIA -> L("Insomnia")
     }
 
 fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier = this.then(

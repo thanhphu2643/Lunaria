@@ -30,6 +30,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChildFriendly
 import androidx.compose.material.icons.outlined.EditCalendar
@@ -81,21 +82,21 @@ fun CalendarScreen() {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        ScreenTitle("Calendar")
+        ScreenTitle(L("Calendar"))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Outlined.CalendarMonth, null, tint = Palette.text)
             Spacer(Modifier.width(14.dp))
             Text(
-                ym.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
+                ym.format(DateTimeFormatter.ofPattern(if (I18n.isVietnamese) "'Tháng' M 'năm' yyyy" else "MMMM yyyy", I18n.locale)),
                 fontSize = 20.sp, fontWeight = FontWeight.Medium, color = Palette.text,
             )
             Spacer(Modifier.weight(1f))
             IconButton(onClick = { ym = ym.minusMonths(1) }) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Previous month", tint = Palette.accent)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, L("Previous month"), tint = Palette.accent)
             }
             IconButton(onClick = { ym = ym.plusMonths(1) }) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Next month", tint = Palette.accent)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, L("Next month"), tint = Palette.accent)
             }
         }
 
@@ -117,7 +118,7 @@ fun CalendarScreen() {
             },
         ) { month ->
             cycle.month(month.year, month.monthValue)?.let { view ->
-                MonthGrid(view, cycle.firstWeekday) { selectedDay = it }
+                MonthGrid(view, cycle.firstWeekday, intimate = { cycle.log(it).intimacy != null }) { selectedDay = it }
             }
         }
 
@@ -125,7 +126,7 @@ fun CalendarScreen() {
 
         if (cycle.periods.isEmpty()) {
             Text(
-                "Tap a day to log when your last period started — predictions appear instantly.",
+                L("Tap a day to log when your last period started — predictions appear instantly."),
                 color = Palette.secondaryText, fontSize = 15.sp,
             )
         }
@@ -144,14 +145,15 @@ fun ScreenTitle(text: String) {
 }
 
 @Composable
-private fun MonthGrid(view: MonthView, firstWeekday: Int, onSelect: (CalDate) -> Unit) {
+private fun MonthGrid(view: MonthView, firstWeekday: Int, intimate: (CalDate) -> Boolean, onSelect: (CalDate) -> Unit) {
     // DayOfWeek: 1 = Monday … 7 = Sunday; firstWeekday: 0 = Sunday.
     val weekdays = (0 until 7).map { DayOfWeek.of(((firstWeekday + it + 6) % 7) + 1) }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
             weekdays.forEach {
                 Text(
-                    it.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
+                    // Vietnamese short names ("Th 2") are too wide for a 7-column grid; use T2…CN.
+                    if (I18n.isVietnamese) (if (it == DayOfWeek.SUNDAY) "CN" else "T${it.value + 1}") else it.getDisplayName(TextStyle.SHORT, I18n.locale),
                     Modifier.weight(1f), color = Palette.secondaryText, fontSize = 16.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
@@ -161,7 +163,7 @@ private fun MonthGrid(view: MonthView, firstWeekday: Int, onSelect: (CalDate) ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 week.forEach { day ->
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        DayCell(day) { onSelect(day.date) }
+                        DayCell(day, intimate = day.inMonth && intimate(day.date)) { onSelect(day.date) }
                     }
                 }
             }
@@ -178,18 +180,18 @@ private fun DrawScope.dashedCircle(color: Color, width: Dp, dash: Float) {
 }
 
 @Composable
-private fun DayCell(day: CalendarDay, onClick: () -> Unit) {
+private fun DayCell(day: CalendarDay, intimate: Boolean, onClick: () -> Unit) {
     val kind = if (day.inMonth) day.kind else DayKind.UNKNOWN
     val textColor = when {
         !day.inMonth -> Palette.secondaryText.copy(alpha = 0.4f)
         kind == DayKind.PERIOD -> Color.White
         else -> Palette.text
     }
+    // Outer box is not clipped so the intimacy heart can sit on the circle's edge.
+    Box(Modifier.widthIn(max = 56.dp).fillMaxWidth().aspectRatio(1f)) {
     Box(
         Modifier
-            .widthIn(max = 56.dp)
-            .fillMaxWidth()
-            .aspectRatio(1f)
+            .fillMaxSize()
             .clip(CircleShape)
             .then(
                 when (kind) {
@@ -204,7 +206,9 @@ private fun DayCell(day: CalendarDay, onClick: () -> Unit) {
                 },
             )
             .clickable(onClick = onClick)
-            .semantics { contentDescription = "${day.date.format("d MMMM")}, ${kind.label}" },
+            .semantics {
+                contentDescription = "${day.date.format("d MMMM")}, ${kind.label}" + if (intimate) ", " + L("intimacy logged") else ""
+            },
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -219,6 +223,16 @@ private fun DayCell(day: CalendarDay, onClick: () -> Unit) {
                     .background(if (kind == DayKind.PERIOD) Color.White else Palette.accent, CircleShape),
             )
         }
+    }
+    if (intimate) {
+        Box(
+            Modifier.align(Alignment.TopEnd).offset(x = 2.dp, y = (-2).dp).size(18.dp)
+                .background(if (kind == DayKind.PERIOD) Palette.accent else Color.White, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Filled.Favorite, null, Modifier.size(11.dp), tint = if (kind == DayKind.PERIOD) Color.White else Palette.accent)
+        }
+    }
     }
 }
 
@@ -243,19 +257,27 @@ private fun Legend() {
                 Text(kind.label, color = Palette.secondaryText, fontSize = 15.sp)
             }
         }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Favorite, null, Modifier.size(14.dp), tint = Palette.accent)
+            Spacer(Modifier.width(6.dp))
+            Text(L("Intimacy"), color = Palette.secondaryText, fontSize = 15.sp)
+        }
     }
 }
 
-enum class Tool(val title: String, val subtitle: String, val icon: ImageVector) {
+enum class Tool(private val titleKey: String, private val subtitleKey: String, val icon: ImageVector) {
     DueDate("Due Date Calculator", "Calculates estimated due date", Icons.Outlined.EditCalendar),
     PregnancyTest("Pregnancy Test Calculator", "Calculates optimal date for pregnancy test.", Icons.Outlined.Science),
-    PregnancyWeek("Pregnancy Calculator", "Estimates pregnancy week.", Icons.Outlined.ChildFriendly),
+    PregnancyWeek("Pregnancy Calculator", "Estimates pregnancy week.", Icons.Outlined.ChildFriendly);
+
+    val title: String get() = L(titleKey)
+    val subtitle: String get() = L(subtitleKey)
 }
 
 @Composable
 private fun GeneralTools(onSelect: (Tool) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        Text("General Tools:", fontSize = 26.sp, fontWeight = FontWeight.SemiBold, color = Palette.text)
+        Text(L("General Tools:"), fontSize = 26.sp, fontWeight = FontWeight.SemiBold, color = Palette.text)
         Tool.entries.forEach { t ->
             Row(
                 Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(40.dp)).clickable { onSelect(t) },

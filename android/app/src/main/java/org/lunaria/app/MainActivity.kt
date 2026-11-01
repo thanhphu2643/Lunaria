@@ -15,6 +15,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        org.lunaria.app.ui.I18n.init(this)
         setContent {
             LunariaTheme {
                 CompositionLocalProvider(LocalCycle provides vm.state) {

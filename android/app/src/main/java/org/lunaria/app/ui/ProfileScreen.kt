@@ -23,6 +23,8 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Switch
@@ -72,59 +74,77 @@ fun ProfileScreen() {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        ScreenTitle("Profile")
+        ScreenTitle(L("Profile"))
 
-        Group("Cycle", "With “Learn from my history” on, averages of your last 6 cycles are used once you have logged data.") {
+        Group(L("App")) {
+            Text(L("Language"), color = Palette.text)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AppLanguage.entries.forEach { lang ->
+                    FilterChip(
+                        selected = I18n.language == lang,
+                        onClick = { I18n.select(lang) },
+                        label = { Text(lang.label) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Palette.accent,
+                            selectedLabelColor = Color.White,
+                        ),
+                    )
+                }
+            }
+        }
+
+        Group(L("Cycle"), L("With “Learn from my history” on, averages of your last 6 cycles are used once you have logged data.")) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Learn from my history", color = Palette.text, modifier = Modifier.weight(1f))
+                Text(L("Learn from my history"), color = Palette.text, modifier = Modifier.weight(1f))
                 Switch(
                     checked = settings.autoAdjust,
                     onCheckedChange = { v -> update { it.copy(autoAdjust = v) } },
                     colors = SwitchDefaults.colors(checkedTrackColor = Palette.accent),
                 )
             }
-            Stepper("Cycle length", settings.cycleLength.toInt(), 15..60,
+            Stepper(L("Cycle length"), settings.cycleLength.toInt(), 15..60,
                 enabled = !(settings.autoAdjust && (stats?.loggedCycles ?: 0u) > 0u)) { v -> update { it.copy(cycleLength = v.toUInt()) } }
-            Stepper("Period length", settings.periodLength.toInt(), 1..14,
+            Stepper(L("Period length"), settings.periodLength.toInt(), 1..14,
                 enabled = !(settings.autoAdjust && cycle.periods.isNotEmpty())) { v -> update { it.copy(periodLength = v.toUInt()) } }
-            Stepper("Luteal phase", settings.lutealLength.toInt(), 7..20) { v -> update { it.copy(lutealLength = v.toUInt()) } }
+            Stepper(L("Luteal phase"), settings.lutealLength.toInt(), 7..20) { v -> update { it.copy(lutealLength = v.toUInt()) } }
         }
 
         if (stats != null && stats.loggedCycles > 0u) {
-            Group("History") {
-                Line("Cycles logged", "${stats.loggedCycles}")
-                stats.shortestCycle?.let { Line("Shortest cycle", "$it days") }
-                stats.longestCycle?.let { Line("Longest cycle", "$it days") }
+            Group(L("History")) {
+                Line(L("Cycles logged"), "${stats.loggedCycles}")
+                stats.shortestCycle?.let { Line(L("Shortest cycle"), Ldays(it.toInt())) }
+                stats.longestCycle?.let { Line(L("Longest cycle"), Ldays(it.toInt())) }
             }
         }
 
-        Group("Periods") {
+        Group(L("Periods")) {
             val periods = cycle.periods.reversed()
-            if (periods.isEmpty()) Text("No periods logged yet", color = Palette.secondaryText)
+            if (periods.isEmpty()) Text(L("No periods logged yet"), color = Palette.secondaryText)
             periods.forEach { p ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(p.start.format("d MMMM yyyy"), color = Palette.text, modifier = Modifier.weight(1f))
                     val days = ChronoUnit.DAYS.between(p.start.toLocal(), p.end.toLocal()) + 1
-                    Text("$days days", color = Palette.secondaryText)
+                    Text(Ldays(days.toInt()), color = Palette.secondaryText)
                     IconButton(onClick = { cycle.perform { cycle.store.deletePeriod(p.start) } }) {
-                        Icon(Icons.Outlined.Delete, "Delete period", tint = Palette.secondaryText)
+                        Icon(Icons.Outlined.Delete, L("Delete period"), tint = Palette.secondaryText)
                     }
                 }
             }
         }
 
         Group(
-            "Your data",
-            "Lunaria has no account, no server, no analytics and no internet permission. Your data never leaves this device unless you export it.\n\nLunaria core v${coreVersion()} · Open source (MIT)",
+            L("Your data"),
+            L("Lunaria has no account, no server, no analytics and no internet permission. Your data never leaves this device unless you export it.") +
+                "\n\nLunaria core v${coreVersion()} · " + L("Open source (MIT)"),
         ) {
-            Action("Export backup", Icons.Outlined.Upload) {
+            Action(L("Export backup"), Icons.Outlined.Upload) {
                 runCatching { cycle.store.exportJson() }.onSuccess { json ->
                     val send = Intent(Intent.ACTION_SEND).setType("application/json").putExtra(Intent.EXTRA_TEXT, json)
-                    context.startActivity(Intent.createChooser(send, "Lunaria backup"))
+                    context.startActivity(Intent.createChooser(send, L("Lunaria backup")))
                 }
             }
-            Action("Import backup", Icons.Outlined.Download) { importer.launch(arrayOf("application/json", "text/plain")) }
-            Action("Erase all data", Icons.Outlined.Delete, color = Color(0xFFD32F2F)) { confirmErase = true }
+            Action(L("Import backup"), Icons.Outlined.Download) { importer.launch(arrayOf("application/json", "text/plain")) }
+            Action(L("Erase all data"), Icons.Outlined.Delete, color = Color(0xFFD32F2F)) { confirmErase = true }
         }
         Spacer(Modifier.height(8.dp))
     }
@@ -132,14 +152,14 @@ fun ProfileScreen() {
     if (confirmErase) {
         AlertDialog(
             onDismissRequest = { confirmErase = false },
-            title = { Text("Erase all data?") },
-            text = { Text("This permanently removes every period and log from this device.") },
+            title = { Text(L("Erase all data?")) },
+            text = { Text(L("This permanently removes every period and log from this device.")) },
             confirmButton = {
                 TextButton(onClick = { confirmErase = false; cycle.perform { cycle.store.eraseAll() } }) {
-                    Text("Erase", color = Color(0xFFD32F2F))
+                    Text(L("Erase"), color = Color(0xFFD32F2F))
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmErase = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { confirmErase = false }) { Text(L("Cancel")) } },
         )
     }
 }
@@ -159,12 +179,12 @@ private fun Group(title: String, footer: String? = null, content: @Composable ()
 @Composable
 private fun Stepper(label: String, value: Int, range: IntRange, enabled: Boolean = true, onChange: (Int) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("$label: $value days", color = Palette.text.copy(alpha = if (enabled) 1f else 0.4f), modifier = Modifier.weight(1f))
+        Text("$label: ${Ldays(value)}", color = Palette.text.copy(alpha = if (enabled) 1f else 0.4f), modifier = Modifier.weight(1f))
         FilledTonalIconButton(onClick = { onChange(value - 1) }, enabled = enabled && value > range.first) {
-            Icon(Icons.Filled.Remove, "Decrease $label")
+            Icon(Icons.Filled.Remove, L("Decrease %s", label))
         }
         FilledTonalIconButton(onClick = { onChange(value + 1) }, enabled = enabled && value < range.last) {
-            Icon(Icons.Filled.Add, "Increase $label")
+            Icon(Icons.Filled.Add, L("Increase %s", label))
         }
     }
 }

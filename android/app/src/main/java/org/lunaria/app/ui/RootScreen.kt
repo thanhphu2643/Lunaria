@@ -55,12 +55,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.lunaria.app.LocalCycle
 
-enum class Tab(val title: String, val icon: ImageVector, val selectedIcon: ImageVector) {
+enum class Tab(private val titleKey: String, val icon: ImageVector, val selectedIcon: ImageVector) {
     Home("Home", Icons.Outlined.Home, Icons.Filled.Home),
     Calendar("Calendar", Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth),
     Log("Log", Icons.Outlined.Sms, Icons.Filled.Sms),
     Learn("Learn", Icons.AutoMirrored.Outlined.Article, Icons.AutoMirrored.Filled.Article),
-    Profile("Profile", Icons.Outlined.Person, Icons.Filled.Person),
+    Profile("Profile", Icons.Outlined.Person, Icons.Filled.Person);
+
+    val title: String get() = L(titleKey)
 }
 
 @Composable
@@ -86,8 +88,8 @@ fun RootScreen() {
     cycle.error?.let { message ->
         AlertDialog(
             onDismissRequest = { cycle.error = null },
-            confirmButton = { TextButton(onClick = { cycle.error = null }) { Text("OK") } },
-            title = { Text("Something went wrong") },
+            confirmButton = { TextButton(onClick = { cycle.error = null }) { Text(L("OK")) } },
+            title = { Text(L("Something went wrong")) },
             text = { Text(message) },
         )
     }

@@ -59,10 +59,10 @@ fun HomeScreen(selectTab: (Tab) -> Unit) {
     ) {
         Column(Modifier.padding(top = 16.dp)) {
             Text(
-                LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault())),
+                LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, d MMMM", I18n.locale)),
                 fontSize = 16.sp, color = Palette.secondaryText,
             )
-            Text("Hello 🌸", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Palette.text)
+            Text(L("Hello") + " 🌸", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Palette.text)
         }
 
         if (status != null) {
@@ -70,24 +70,24 @@ fun HomeScreen(selectTab: (Tab) -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 val today = cycle.today
                 if (cycle.isPeriodDay(today)) {
-                    PillButton("Period ended", Icons.Filled.Check, filled = true, modifier = Modifier.weight(1f)) {
+                    PillButton(L("Period ended"), Icons.Filled.Check, filled = true, modifier = Modifier.weight(1f)) {
                         cycle.perform { cycle.store.endPeriod(today) }
                     }
                 } else {
-                    PillButton("Period started", Icons.Filled.WaterDrop, filled = true, modifier = Modifier.weight(1f)) {
+                    PillButton(L("Period started"), Icons.Filled.WaterDrop, filled = true, modifier = Modifier.weight(1f)) {
                         cycle.perform { cycle.store.startPeriod(today) }
                     }
                 }
-                PillButton("Log today", Icons.Outlined.EditNote, filled = false, modifier = Modifier.weight(1f)) {
+                PillButton(L("Log today"), Icons.Outlined.EditNote, filled = false, modifier = Modifier.weight(1f)) {
                     selectTab(Tab.Log)
                 }
             }
             PhaseCard(status)
             cycle.stats?.let { stats ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatTile("${stats.averageCycleLength}", "days", "Avg. cycle", Modifier.weight(1f))
-                    StatTile("${stats.averagePeriodLength}", "days", "Avg. period", Modifier.weight(1f))
-                    StatTile("${stats.loggedCycles}", "", "Cycles logged", Modifier.weight(1f))
+                    StatTile("${stats.averageCycleLength}", L("days"), L("Avg. cycle"), Modifier.weight(1f))
+                    StatTile("${stats.averagePeriodLength}", L("days"), L("Avg. period"), Modifier.weight(1f))
+                    StatTile("${stats.loggedCycles}", "", L("Cycles logged"), Modifier.weight(1f))
                 }
             }
         } else {
@@ -103,13 +103,13 @@ private fun CycleRing(status: CycleStatus) {
     val days = status.daysUntilNextPeriod
     val late = status.daysLate.toInt()
     val headline = when {
-        late > 0 -> "$late day${if (late == 1) "" else "s"} late"
-        days == 0 -> "Period expected today"
-        else -> "$days day${if (days == 1) "" else "s"}"
+        late > 0 -> L("%s late", Ldays(late))
+        days == 0 -> L("Period expected today")
+        else -> Ldays(days)
     }
     Box(
         Modifier.fillMaxWidth().padding(vertical = 8.dp)
-            .clearAndSetSemantics { contentDescription = "Period in $headline, cycle day ${status.cycleDay}" },
+            .clearAndSetSemantics { contentDescription = L("Period in %s, cycle day %d", headline, status.cycleDay.toInt()) },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(260.dp)) {
@@ -125,11 +125,11 @@ private fun CycleRing(status: CycleStatus) {
             )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(40.dp)) {
-            if (late == 0 && days != 0) Text("Period in", fontSize = 17.sp, color = Palette.secondaryText)
+            if (late == 0 && days != 0) Text(L("Period in"), fontSize = 17.sp, color = Palette.secondaryText)
             Text(headline, fontSize = 34.sp, fontWeight = FontWeight.Bold, color = Palette.accent, textAlign = TextAlign.Center)
             Spacer(Modifier.height(6.dp))
             Text(
-                "Cycle day ${status.cycleDay}",
+                L("Cycle day %d", status.cycleDay.toInt()),
                 fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Palette.text,
                 modifier = Modifier.background(Palette.ovulation, CircleShape).padding(horizontal = 14.dp, vertical = 6.dp),
             )
@@ -143,9 +143,9 @@ private fun PhaseCard(status: CycleStatus) {
         Text(status.phase.title, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = Palette.text)
         Text(status.phase.blurb, fontSize = 15.sp, color = Palette.secondaryText)
         HorizontalDivider(color = Palette.text.copy(alpha = 0.08f))
-        InfoLine(Palette.period, "Next period", status.nextPeriodStart.format())
-        InfoLine(Palette.ovulation, "Ovulation", status.nextOvulation.format())
-        InfoLine(Palette.fertile, "Fertile window", "${status.fertileStart.format()} – ${status.fertileEnd.format()}")
+        InfoLine(Palette.period, L("Next period"), status.nextPeriodStart.format())
+        InfoLine(Palette.ovulation, L("Ovulation"), status.nextOvulation.format())
+        InfoLine(Palette.fertile, L("Fertile window"), "${status.fertileStart.format()} – ${status.fertileEnd.format()}")
     }
 }
 
@@ -186,14 +186,14 @@ private fun EmptyState(openCalendar: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         Icon(Icons.Filled.WaterDrop, null, tint = Palette.period, modifier = Modifier.size(64.dp))
-        Text("Welcome to Lunaria", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = Palette.text)
+        Text(L("Welcome to Lunaria"), fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = Palette.text)
         Text(
-            "Log the first day of your last period and Lunaria will predict your next period, ovulation and fertile window. Everything stays on this device.",
+            L("Log the first day of your last period and Lunaria will predict your next period, ovulation and fertile window. Everything stays on this device."),
             textAlign = TextAlign.Center, color = Palette.secondaryText,
         )
-        PillButton("My period started today", Icons.Filled.WaterDrop, filled = true) {
+        PillButton(L("My period started today"), Icons.Filled.WaterDrop, filled = true) {
             cycle.perform { cycle.store.startPeriod(cycle.today) }
         }
-        PillButton("Pick a past date", Icons.Outlined.CalendarMonth, filled = false, onClick = openCalendar)
+        PillButton(L("Pick a past date"), Icons.Outlined.CalendarMonth, filled = false, onClick = openCalendar)
     }
 }

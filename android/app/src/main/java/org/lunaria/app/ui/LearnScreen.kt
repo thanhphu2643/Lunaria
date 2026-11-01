@@ -45,7 +45,9 @@ import androidx.compose.ui.unit.sp
 
 private class Article(val icon: ImageVector, val title: String, val summary: String, val body: String)
 
-private val articles = listOf(
+private val articles: List<Article> get() = if (I18n.isVietnamese) viArticles else enArticles
+
+private val enArticles = listOf(
     Article(
         Icons.Filled.WaterDrop, "The four phases of your cycle", "Menstrual, follicular, ovulation and luteal.",
         """
@@ -85,6 +87,46 @@ private val articles = listOf(
     ),
 )
 
+private val viArticles = listOf(
+    Article(
+        Icons.Filled.WaterDrop, "Bốn giai đoạn của chu kỳ", "Hành kinh, nang trứng, rụng trứng và hoàng thể.",
+        """
+        **Hành kinh (ngày 1–5):** niêm mạc tử cung bong ra. Nội tiết tố ở mức thấp nhất.
+
+        **Nang trứng (ngày 1–13):** estrogen tăng khi các nang trứng phát triển. Năng lượng thường tăng lên.
+
+        **Rụng trứng (khoảng ngày 14 với chu kỳ 28 ngày):** trứng được phóng ra và sống được khoảng 24 giờ.
+
+        **Hoàng thể (ngày 15–28):** progesterone tăng. Nếu không có thai, nội tiết tố giảm xuống và kỳ kinh tiếp theo bắt đầu.
+        """.trimIndent(),
+    ),
+    Article(
+        Icons.Filled.AutoAwesome, "Lunaria dự đoán thế nào", "Giải thích phương pháp tính theo lịch.",
+        """
+        Lunaria lấy trung bình độ dài 6 chu kỳ gần nhất của bạn (từ ngày bắt đầu kỳ này đến ngày bắt đầu kỳ sau). Ngày rụng trứng được ước tính là 14 ngày trước kỳ kinh dự kiến, vì giai đoạn hoàng thể khá ổn định. Cửa sổ thụ thai gồm 5 ngày trước rụng trứng, ngày rụng trứng và 1 ngày sau đó, vì tinh trùng có thể sống tới 5 ngày.
+
+        Dự đoán sẽ chính xác hơn khi bạn ghi lại nhiều chu kỳ hơn. Đây chỉ là ước tính: **đừng dùng làm biện pháp tránh thai.**
+        """.trimIndent(),
+    ),
+    Article(
+        Icons.Filled.MedicalServices, "Khi nào nên gặp bác sĩ", "Những dấu hiệu cần kiểm tra.",
+        """
+        Bạn nên đi khám nếu:
+        • chu kỳ thường ngắn hơn 21 ngày hoặc dài hơn 35 ngày
+        • kỳ kinh kéo dài hơn 7 ngày
+        • ra máu rất nhiều (phải thay băng mỗi 1–2 giờ)
+        • đau dữ dội đến mức không sinh hoạt bình thường được
+        • trễ kinh từ 3 kỳ liên tiếp trở lên mà không mang thai
+        """.trimIndent(),
+    ),
+    Article(
+        Icons.Filled.Lock, "Quyền riêng tư của bạn", "Vì sao mọi dữ liệu chỉ nằm trên điện thoại.",
+        """
+        Dữ liệu kinh nguyệt là dữ liệu sức khỏe nhạy cảm. Lunaria chỉ lưu nó trong một file trên máy của bạn. App thậm chí không xin quyền truy cập internet. Không tài khoản, không đồng bộ đám mây, không quảng cáo, không SDK phân tích. Mã nguồn mở nên ai cũng có thể kiểm chứng điều này.
+        """.trimIndent(),
+    ),
+)
+
 /** Renders `**bold**` spans; enough for the short built-in articles. */
 private fun markdownBold(text: String): AnnotatedString = buildAnnotatedString {
     text.split("**").forEachIndexed { i, part ->
@@ -101,7 +143,7 @@ fun LearnScreen() {
         BackHandler { openIndex = -1 }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-                IconButton(onClick = { openIndex = -1 }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Palette.accent) }
+                IconButton(onClick = { openIndex = -1 }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, L("Back"), tint = Palette.accent) }
                 Text(open.title, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = Palette.text)
             }
             Spacer(Modifier.height(12.dp))
@@ -115,7 +157,7 @@ fun LearnScreen() {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        ScreenTitle("Learn")
+        ScreenTitle(L("Learn"))
         articles.forEachIndexed { i, a ->
             Row(
                 Modifier.fillMaxWidth().card().clickable { openIndex = i },

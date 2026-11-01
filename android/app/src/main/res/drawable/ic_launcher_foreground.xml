@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A drop inside the 72dp safe zone of a 108dp adaptive icon. -->
+<!-- Crescent moon + sparkles, same design as the iOS icon (scripts/make-icon.py). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#E0607E"
-        android:pathData="M54,30 C54,30 36,52 36,64 A18,18 0 0,0 72,64 C72,52 54,30 54,30 Z" />
-    <path android:fillColor="#FFFFFF" android:fillAlpha="0.55"
-        android:pathData="M45,63 A9,9 0 0,0 50,71 L48,74 A12,12 0 0,1 42,64 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M52.17,32.48 A21.60,21.60 0 1,0 73.77,62.71 A18.58,18.58 0 0,1 52.17,32.48 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M65.52,41.40 L66.36,45.96 L70.92,46.80 L66.36,47.64 L65.52,52.20 L64.68,47.64 L60.12,46.80 L64.68,45.96 Z" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.86" android:pathData="M72.00,56.16 L72.45,58.59 L74.88,59.04 L72.45,59.49 L72.00,61.92 L71.55,59.49 L69.12,59.04 L71.55,58.59 Z" />
 </vector>

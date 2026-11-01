@@ -56,29 +56,29 @@ fun Modifier.card(): Modifier = this
 
 val DayKind.label: String
     get() = when (this) {
-        DayKind.PERIOD -> "Period"
-        DayKind.PREDICTED_PERIOD -> "Predicted"
-        DayKind.OVULATION -> "Ovulation"
-        DayKind.FERTILE -> "Fertile Days"
-        DayKind.SAFE -> "Safe Days"
+        DayKind.PERIOD -> L("Period")
+        DayKind.PREDICTED_PERIOD -> L("Predicted")
+        DayKind.OVULATION -> L("Ovulation")
+        DayKind.FERTILE -> L("Fertile Days")
+        DayKind.SAFE -> L("Safe Days")
         DayKind.UNKNOWN -> ""
     }
 
 val CyclePhase.title: String
     get() = when (this) {
-        CyclePhase.MENSTRUAL -> "Menstrual phase"
-        CyclePhase.FOLLICULAR -> "Follicular phase"
-        CyclePhase.FERTILE -> "Fertile window"
-        CyclePhase.LUTEAL -> "Luteal phase"
+        CyclePhase.MENSTRUAL -> L("Menstrual phase")
+        CyclePhase.FOLLICULAR -> L("Follicular phase")
+        CyclePhase.FERTILE -> L("Fertile window")
+        CyclePhase.LUTEAL -> L("Luteal phase")
     }
 
 val CyclePhase.blurb: String
     get() = when (this) {
-        CyclePhase.MENSTRUAL -> "Rest, hydrate and keep warm. Energy is usually lower."
-        CyclePhase.FOLLICULAR -> "Estrogen is rising — energy and mood often improve."
-        CyclePhase.FERTILE -> "Highest chance of pregnancy in this window."
-        CyclePhase.LUTEAL -> "Progesterone peaks. PMS symptoms may appear near the end."
+        CyclePhase.MENSTRUAL -> L("Rest, hydrate and keep warm. Energy is usually lower.")
+        CyclePhase.FOLLICULAR -> L("Estrogen is rising — energy and mood often improve.")
+        CyclePhase.FERTILE -> L("Highest chance of pregnancy in this window.")
+        CyclePhase.LUTEAL -> L("Progesterone peaks. PMS symptoms may appear near the end.")
     }
 
 fun CalDate.format(pattern: String = "d MMM"): String =
-    toLocal().format(DateTimeFormatter.ofPattern(pattern, Locale.getDefault()))
+    toLocal().format(DateTimeFormatter.ofPattern(pattern, I18n.locale))
